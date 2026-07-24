@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import { Umzug, SequelizeStorage } from "umzug";
 import sequelize from "./config/database.js";
 import "./models/index.js";
 import authRoutes from "./routes/auth.js";
@@ -32,14 +33,21 @@ app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
+const umzug = new Umzug({
+  migrations: { glob: "src/migrations/*.js" },
+  context: sequelize,
+  storage: new SequelizeStorage({ sequelize }),
+  logger: console,
+});
+
 async function start() {
   const MAX_RETRIES = 10;
   const RETRY_DELAY = 3000;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      await sequelize.sync();
-      console.log("Database synced");
+      await umzug.up();
+      console.log("Migrations complete");
       app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
       });
@@ -55,6 +63,8 @@ async function start() {
   }
 }
 
-start();
+if (process.env.NODE_ENV !== "test") {
+  start();
+}
 
 export default app;

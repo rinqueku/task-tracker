@@ -1,12 +1,20 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
+import { Umzug, SequelizeStorage } from "umzug";
 import sequelize from "./config/database.js";
 import { User, Category, Task } from "./models/index.js";
 
+const umzug = new Umzug({
+  migrations: { glob: "src/migrations/*.js" },
+  context: sequelize,
+  storage: new SequelizeStorage({ sequelize }),
+  logger: console,
+});
+
 async function seed() {
   try {
-    await sequelize.sync();
-    console.log("Database synced");
+    await umzug.up();
+    console.log("Migrations complete");
 
     const existing = await User.findOne({ where: { email: "test@example.com" } });
     if (existing) {
