@@ -1,0 +1,8 @@
+{
+  "build": {
+    "buildPath": "backend"
+  },
+  "deploy": {
+    "startCommand": "node src/index.js"
+  }
+}
