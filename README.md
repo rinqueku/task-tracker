@@ -117,11 +117,13 @@ All endpoints prefixed with `/api`. Protected routes require `Authorization: Bea
 |--------|----------|------|-------------|
 | GET | /api/health | No | Health check |
 | POST | /api/auth/register | No | Create account (name, email, password) |
-| POST | /api/auth/login | No | Sign in, returns JWT |
+| POST | /api/auth/login | No | Sign in, returns JWT (rate-limited: 10 attempts/15min) |
+| POST | /api/auth/forgot-password | No | Request password reset token |
+| POST | /api/auth/reset-password | No | Reset password using token |
 | GET | /api/auth/me | Yes | Get current user |
 | GET | /api/categories | Yes | List all categories |
 | POST | /api/categories | Yes | Create category (name) |
-| GET | /api/tasks | Yes | List user's tasks (supports ?status=, ?category_id=, ?search=, ?page=, ?limit=) |
+| GET | /api/tasks | Yes | List user's tasks (supports ?status=, ?category_id=, ?search=, ?page=, ?limit=, ?sort_by=due_date|status|createdAt, ?sort_order=ASC|DESC) |
 | GET | /api/tasks/:id | Yes | Get one task |
 | POST | /api/tasks | Yes | Create task |
 | PUT | /api/tasks/:id | Yes | Update task |
@@ -155,10 +157,23 @@ All endpoints prefixed with `/api`. Protected routes require `Authorization: Bea
    - **Environment Variable**: `VITE_API_BASE_URL` = your Railway backend URL
 5. Deploy
 
+## Running Tests
+
+```bash
+cd backend
+npm test
+```
+
+Tests use Jest + supertest and run against the Express app directly (no database needed for the health check test).
+
+## Bonus Challenges Implemented
+
+- **Sorting** — tasks can be sorted by `due_date`, `status`, or `createdAt` with ASC/DESC order via `?sort_by=` and `?sort_order=` query params
+- **Rate limiting** — login endpoint limited to 10 attempts per 15 minutes per IP (plus a global 30-attempt threshold)
+- **Unit tests** — Jest + supertest for the health endpoint
+- **Password reset flow** — forgot-password and reset-password UI with token returned in API response (email delivery skipped due to limited mobile data)
+- **Sequelize migrations** — migration files kept as schema documentation (app uses `sequelize.sync()` for production reliability)
+
 ## Known Limitations
 
-- Sorting is not implemented (tasks are ordered by creation date descending)
-- No unit tests
-- No rate limiting on login
 - The frontend uses TanStack Router (not React Router DOM) — it was scaffolded with Lovable/TanStack Start which uses TanStack Router by default
-- Password reset flow is not implemented
