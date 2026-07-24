@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cross-env NODE_OPTIONS=--experimental-require-module vite build",
+  "outputDirectory": ".vercel/output",
+  "installCommand": "npm install",
+  "framework": null
+}

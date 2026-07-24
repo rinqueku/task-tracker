@@ -1,0 +1,10 @@
+node_modules
+dist
+.output
+.vercel
+.vinxi
+.nitro
+.wrangler
+.env
+*.local
+package-lock.json
