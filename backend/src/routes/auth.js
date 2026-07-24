@@ -2,23 +2,26 @@ import { randomBytes } from "node:crypto";
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import rateLimit from "express-rate-limit";
 import { User } from "../models/index.js";
 import { auth } from "../middleware/auth.js";
 import { requireFields, isValidEmail } from "../validators/index.js";
 
 const router = Router();
 
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { message: "Too many login attempts. Try again later." },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.ip ?? req.socket?.remoteAddress ?? "unknown";
-  },
-});
+const loginAttempts = new Map();
+
+function loginRateLimiter(req, res, next) {
+  const ip = req.ip;
+  const now = Date.now();
+  const attempts = loginAttempts.get(ip) || [];
+  const recent = attempts.filter((t) => now - t < 15 * 60 * 1000);
+  if (recent.length >= 10) {
+    return res.status(429).json({ message: "Too many login attempts. Try again later." });
+  }
+  recent.push(now);
+  loginAttempts.set(ip, recent);
+  next();
+}
 
 const resetTokens = new Map();
 const RESET_TTL = 60 * 60 * 1000;
@@ -70,7 +73,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", loginLimiter, async (req, res) => {
+router.post("/login", loginRateLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
