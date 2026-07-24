@@ -33,15 +33,25 @@ app.use((req, res) => {
 });
 
 async function start() {
-  try {
-    await sequelize.sync();
-    console.log("Database synced");
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  } catch (err) {
-    console.error("Failed to start server:", err);
-    process.exit(1);
+  const MAX_RETRIES = 10;
+  const RETRY_DELAY = 3000;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      await sequelize.sync();
+      console.log("Database synced");
+      app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+      });
+      return;
+    } catch (err) {
+      console.error(`DB connection attempt ${attempt}/${MAX_RETRIES} failed:`, err.message);
+      if (attempt === MAX_RETRIES) {
+        console.error("Failed to connect to database after all retries");
+        process.exit(1);
+      }
+      await new Promise((r) => setTimeout(r, RETRY_DELAY));
+    }
   }
 }
 
