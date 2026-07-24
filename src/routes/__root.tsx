@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 
+import appCss from "../styles.css?url";
 import { AuthProvider, useAuth } from "../lib/auth";
 
 function NotFoundComponent() {
