@@ -22,7 +22,7 @@ app.use(helmet());
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok" });
+  res.json({ status: "ok", ip: req.ip, ips: req.ips });
 });
 
 app.use("/api/auth", authRoutes);

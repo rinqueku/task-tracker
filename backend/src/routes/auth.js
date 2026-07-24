@@ -15,6 +15,9 @@ const loginLimiter = rateLimit({
   message: { message: "Too many login attempts. Try again later." },
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => {
+    return req.ip ?? req.socket?.remoteAddress ?? "unknown";
+  },
 });
 
 const resetTokens = new Map();
