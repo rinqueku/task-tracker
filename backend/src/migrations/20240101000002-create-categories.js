@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 
 export default {
-  async up({ context: sequelize }) {
+  async up(sequelize) {
     const qi = sequelize.getQueryInterface();
     const tables = await qi.showAllTables();
     if (tables.includes("Categories")) return;
@@ -12,7 +12,7 @@ export default {
       updatedAt: { type: DataTypes.DATE, allowNull: false },
     });
   },
-  async down({ context: sequelize }) {
+  async down(sequelize) {
     await sequelize.getQueryInterface().dropTable("Categories");
   },
 };
