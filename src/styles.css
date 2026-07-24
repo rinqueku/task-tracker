@@ -142,3 +142,92 @@
     color: var(--color-foreground);
   }
 }
+
+/* Ambient animated gradient-mesh background (CSS-only, GPU-friendly) */
+@keyframes blob-drift-1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(6vw, 4vh, 0) scale(1.15); }
+  66%      { transform: translate3d(-4vw, 8vh, 0) scale(0.95); }
+}
+@keyframes blob-drift-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(-8vw, -6vh, 0) scale(1.2); }
+}
+@keyframes blob-drift-3 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  40%      { transform: translate3d(5vw, -7vh, 0) scale(1.1); }
+  80%      { transform: translate3d(-6vw, 3vh, 0) scale(0.9); }
+}
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at top left, oklch(0.97 0.03 250), transparent 60%),
+    radial-gradient(ellipse at bottom right, oklch(0.97 0.03 200), transparent 60%),
+    oklch(0.995 0.003 250);
+}
+.ambient-bg::before,
+.ambient-bg::after,
+.ambient-bg > span {
+  content: "";
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  filter: blur(70px);
+  will-change: transform;
+  opacity: 0.55;
+}
+.ambient-bg::before {
+  width: 55vw; height: 55vw;
+  top: -15vh; left: -10vw;
+  background: radial-gradient(circle, oklch(0.82 0.14 255) 0%, transparent 70%);
+  animation: blob-drift-1 22s ease-in-out infinite;
+}
+.ambient-bg::after {
+  width: 60vw; height: 60vw;
+  bottom: -20vh; right: -15vw;
+  background: radial-gradient(circle, oklch(0.82 0.13 305) 0%, transparent 70%);
+  animation: blob-drift-2 28s ease-in-out infinite;
+}
+.ambient-bg > span {
+  width: 45vw; height: 45vw;
+  top: 30vh; left: 30vw;
+  background: radial-gradient(circle, oklch(0.85 0.12 195) 0%, transparent 70%);
+  animation: blob-drift-3 25s ease-in-out infinite;
+}
+
+.ambient-bg-vibrant::before { opacity: 0.85; }
+.ambient-bg-vibrant::after  { opacity: 0.85; }
+.ambient-bg-vibrant > span  { opacity: 0.75; }
+
+.dark .ambient-bg {
+  background:
+    radial-gradient(ellipse at top left, oklch(0.22 0.05 265), transparent 60%),
+    radial-gradient(ellipse at bottom right, oklch(0.22 0.05 220), transparent 60%),
+    oklch(0.13 0.04 265);
+}
+.dark .ambient-bg::before {
+  background: radial-gradient(circle, oklch(0.35 0.15 265) 0%, transparent 70%);
+}
+.dark .ambient-bg::after {
+  background: radial-gradient(circle, oklch(0.35 0.13 305) 0%, transparent 70%);
+}
+.dark .ambient-bg > span {
+  background: radial-gradient(circle, oklch(0.35 0.12 195) 0%, transparent 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-bg::before,
+  .ambient-bg::after,
+  .ambient-bg > span { animation: none; }
+}
+
+@utility glass {
+  background-color: color-mix(in oklab, var(--color-background) 65%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+}

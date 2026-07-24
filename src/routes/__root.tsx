@@ -7,14 +7,14 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { AuthProvider, useAuth } from "../lib/auth";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
@@ -39,7 +39,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           This page didn't load
@@ -109,14 +109,38 @@ function RootShell({ children }: { children: ReactNode }) {
 function Header() {
   const { isAuthenticated, hydrated, logout } = useAuth();
   const router = useRouter();
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("dark-mode");
+    const preferDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const isDark = stored !== null ? stored === "true" : preferDark;
+    setDark(isDark);
+    document.documentElement.classList.toggle("dark", isDark);
+  }, []);
+
+  function toggleDark() {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("dark-mode", String(next));
+  }
+
   if (!hydrated) return null;
   return (
-    <header className="border-b border-border bg-background">
+    <header className="border-b border-border/60 bg-background/60 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link to="/" className="text-base font-semibold tracking-tight">
           Task Tracker
         </Link>
         <nav className="flex items-center gap-3 text-sm">
+          <button
+            onClick={toggleDark}
+            className="rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-medium hover:bg-accent"
+            aria-label="Toggle dark mode"
+          >
+            {dark ? "☀️" : "🌙"}
+          </button>
           {isAuthenticated ? (
             <>
               <Link to="/tasks" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground font-medium" }}>
@@ -156,11 +180,17 @@ function Header() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const path = router.state.location.pathname;
+  const isAuth = path === "/signin" || path === "/signup";
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <div className="min-h-screen bg-background text-foreground">
+        <div className="relative min-h-screen text-foreground">
+          <div className={"ambient-bg" + (isAuth ? " ambient-bg-vibrant" : "")} aria-hidden="true">
+            <span />
+          </div>
           <Header />
           <Outlet />
         </div>
