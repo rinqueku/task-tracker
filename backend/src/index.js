@@ -2,7 +2,6 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import { Umzug, SequelizeStorage } from "umzug";
 import sequelize from "./config/database.js";
 import "./models/index.js";
 import authRoutes from "./routes/auth.js";
@@ -12,12 +11,12 @@ import taskRoutes from "./routes/tasks.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(helmet());
 const corsOrigin = process.env.CORS_ORIGIN;
 app.use(cors({
   origin: corsOrigin ? corsOrigin.split(",").map((s) => s.trim()) : true,
   credentials: true,
 }));
+app.use(helmet());
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
@@ -37,30 +36,14 @@ app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-const umzug = new Umzug({
-  migrations: { glob: "src/migrations/*.js" },
-  context: sequelize,
-  storage: new SequelizeStorage({ sequelize }),
-  logger: console,
-});
-
 async function start() {
   const MAX_RETRIES = 10;
   const RETRY_DELAY = 3000;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      try {
-        await umzug.up();
-      } catch {
-        const qi = sequelize.getQueryInterface();
-        const tables = await qi.showAllTables();
-        if (tables.includes("SequelizeMeta")) {
-          await qi.dropTable("SequelizeMeta");
-        }
-        await umzug.up();
-      }
-      console.log("Migrations complete");
+      await sequelize.sync();
+      console.log("Database synced");
       app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
       });
