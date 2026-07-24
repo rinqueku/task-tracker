@@ -8,18 +8,13 @@ import { requireFields, isValidEmail } from "../validators/index.js";
 
 const router = Router();
 
-const loginAttempts = new Map();
+let globalLoginCount = 0;
 
 function loginRateLimiter(req, res, next) {
-  const ip = req.ip;
-  const now = Date.now();
-  const attempts = loginAttempts.get(ip) || [];
-  const recent = attempts.filter((t) => now - t < 15 * 60 * 1000);
-  if (recent.length >= 10) {
+  globalLoginCount++;
+  if (globalLoginCount > 10) {
     return res.status(429).json({ message: "Too many login attempts. Try again later." });
   }
-  recent.push(now);
-  loginAttempts.set(ip, recent);
   next();
 }
 
