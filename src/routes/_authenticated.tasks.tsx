@@ -154,7 +154,7 @@ function TasksPage() {
           No tasks yet. Create your first one.
         </div>
       ) : (
-        <ul className="divide-y divide-border overflow-hidden rounded-md border border-border">
+        <ul className="divide-y divide-border overflow-hidden rounded-md border border-border bg-white dark:bg-transparent">
           {tasks.map((t) => (
             <TaskRow
               key={t.id}
