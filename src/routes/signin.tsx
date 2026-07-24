@@ -68,6 +68,11 @@ function SignInPage() {
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
+        <p className="mt-4 text-sm text-center">
+          <Link to="/forgot-password" className="text-muted-foreground hover:text-foreground underline">
+            Forgot password?
+          </Link>
+        </p>
         <p className="mt-6 text-sm text-muted-foreground">
           No account?{" "}
           <Link to="/signup" className="text-foreground underline">
