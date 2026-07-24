@@ -8,18 +8,31 @@ import { requireFields, isValidEmail } from "../validators/index.js";
 
 const router = Router();
 
-const loginAttempts = new Map();
+const globalLoginAttempts = [];
+const ipLoginAttempts = new Map();
 
 function loginRateLimiter(req, res, next) {
-  const ip = req.ip || req.socket?.remoteAddress || "unknown";
   const now = Date.now();
-  const attempts = loginAttempts.get(ip) || [];
-  const recent = attempts.filter((t) => now - t < 15 * 60 * 1000);
-  if (recent.length >= 10) {
+  const windowMs = 15 * 60 * 1000;
+
+  globalLoginAttempts.push(now);
+  const recentGlobal = globalLoginAttempts.filter((t) => now - t < windowMs);
+  globalLoginAttempts.length = 0;
+  globalLoginAttempts.push(...recentGlobal);
+
+  if (recentGlobal.length > 30) {
     return res.status(429).json({ message: "Too many login attempts. Try again later." });
   }
-  recent.push(now);
-  loginAttempts.set(ip, recent);
+
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || req.socket?.remoteAddress || "unknown";
+  const attempts = ipLoginAttempts.get(ip) || [];
+  const recentIp = attempts.filter((t) => now - t < windowMs);
+  if (recentIp.length >= 10) {
+    return res.status(429).json({ message: "Too many login attempts. Try again later." });
+  }
+  recentIp.push(now);
+  ipLoginAttempts.set(ip, recentIp);
+
   next();
 }
 
