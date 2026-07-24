@@ -50,7 +50,16 @@ async function start() {
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      await umzug.up();
+      try {
+        await umzug.up();
+      } catch {
+        const qi = sequelize.getQueryInterface();
+        const tables = await qi.showAllTables();
+        if (tables.includes("SequelizeMeta")) {
+          await qi.dropTable("SequelizeMeta");
+        }
+        await umzug.up();
+      }
       console.log("Migrations complete");
       app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
