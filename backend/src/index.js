@@ -11,6 +11,8 @@ import taskRoutes from "./routes/tasks.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.set("trust proxy", 1);
+
 const corsOrigin = process.env.CORS_ORIGIN;
 app.use(cors({
   origin: corsOrigin ? corsOrigin.split(",").map((s) => s.trim()) : true,

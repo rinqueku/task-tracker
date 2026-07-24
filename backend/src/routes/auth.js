@@ -149,54 +149,6 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-router.post("/forgot-password", async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: "Email is required" });
-
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      return res.json({ message: "If that email exists, a reset link has been sent." });
-    }
-
-    const token = randomBytes(32).toString("hex");
-    resetTokens.set(token, { email, expiresAt: Date.now() + RESET_TTL });
-
-    console.log(`[Password Reset] Token for ${email}: ${token}`);
-    res.json({ message: "If that email exists, a reset link has been sent." });
-  } catch (err) {
-    console.error("Forgot-password error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-router.post("/reset-password", async (req, res) => {
-  try {
-    const { token, password } = req.body;
-    if (!token || !password) {
-      return res.status(400).json({ message: "Token and password are required" });
-    }
-    if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
-    }
-
-    const entry = resetTokens.get(token);
-    if (!entry || Date.now() > entry.expiresAt) {
-      resetTokens.delete(token);
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    const hashed = await bcrypt.hash(password, 10);
-    await User.update({ password: hashed }, { where: { email: entry.email } });
-    resetTokens.delete(token);
-
-    res.json({ message: "Password has been reset successfully" });
-  } catch (err) {
-    console.error("Reset-password error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
 router.get("/me", auth, async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
